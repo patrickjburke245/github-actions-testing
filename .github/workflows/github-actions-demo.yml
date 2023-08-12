@@ -1,44 +1,30 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
-jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-  
-  build-cli:
-    name: build-cli
-    runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: foresitelabs/github-action-lintr:latest
-      PROJECT_KEY: default # Set the desired project to run the cli scanning with
-
-    steps:
-    # checks-out your repository under $GitHub_WORKSPACE, so your workflow can access it.
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    # Build your docker image, that is going to be scanned in the next step
-    - name: Docker Image Build
-      run: docker build -t $IMAGE_NAME .
-
-    # Run Orca CLI against the previously created container image
-    - name: Orca CLI - Security Scanning
+name: Sample Orca Container Image Scan Workflow
+  on:
+    # Scan for each push event on your protected branch. If you have a different branch configured, please adjust the configuration accordingly by replacing 'main'.
+    push:
+      branches: [ "main" ]
+    # NOTE: To enable scanning for pull requests, uncomment the section below.
+    #pull_request:
+      #branches: [ "main" ]
+    # NOTE: To schedule a daily scan at midnight, uncomment the section below.
+    #schedule:
+      #- cron: '0 0 * * *'
+  jobs:
+    orca-container_scan:
+      name: Orca Container Image Scan
+      runs-on: ubuntu-latest
       env:
-        ORCA_SECURITY_API_TOKEN: aHR0cHM6Ly9hcHAudXMub3JjYXNlY3VyaXR5LmlvfHxVMk1HNHhhTGo3RXBPYzZJQW9ib2lGdzJIVUx3ZXVYQw==
-      run: |
-        set +e
-        apt update && apt install -y curl
-        curl -sfL 'https://raw.GitHubusercontent.com/orcasecurity/orca-cli/main/install.sh' | bash
-        orca-cli -p "${PROJECT_KEY}" image scan ${IMAGE_NAME}
+        PROJECT_KEY: default # Set the desired project to run the cli scanning with
+      steps:
+        # Checkout your repository under $GITHUB_WORKSPACE, so your job can access it
+        - name: Checkout Repository
+          uses: actions/checkout@v3
+
+        - name: Run Orca Container Image Scan
+          uses: orcasecurity/shiftleft-container-image-action@v1
+          with:
+            api_token: aHR0cHM6Ly9hcHAudXMub3JjYXNlY3VyaXR5LmlvfHxVMk1HNHhhTGo3RXBPYzZJQW9ib2lGdzJIVUx3ZXVYQw==
+            project_key: ${{ env.PROJECT_KEY }}
+            image: nginx:latest
+            output:
+              "results/"
