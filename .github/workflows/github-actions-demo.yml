@@ -21,7 +21,7 @@ jobs:
     name: build-cli
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: foresitelabs/github-action-lintr
+      IMAGE_NAME: foresitelabs/github-action-lintr:latest
       PROJECT_KEY: default # Set the desired project to run the cli scanning with
 
     steps:
